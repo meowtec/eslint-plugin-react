@@ -178,6 +178,56 @@ ruleTester.run('no-unused-class-component-methods', rule, {
         }
       `,
       parser: 'babel-eslint'
+    },
+    {
+      code: `
+        class Foo extends React.Component {
+          action = async () => {}
+          render() {
+            return <button onClick={this.action}>Click</button>;
+          }
+        }
+      `,
+      parser: 'babel-eslint'
+    },
+    {
+      code: `
+        class Foo extends React.Component {
+          async action() {
+            console.log('error');
+          }
+          render() {
+            return <button onClick={() => this.action()}>Click</button>;
+          }
+        }
+      `,
+      parser: 'babel-eslint'
+    },
+    {
+      code: `
+        class Foo extends React.Component {
+          * action() {
+            console.log('error');
+          }
+          render() {
+            return <button onClick={() => this.action()}>Click</button>;
+          }
+        }
+      `,
+      parser: 'babel-eslint'
+    },
+    {
+      code: `
+        class Foo extends React.Component {
+          async * action() {
+            console.log('error');
+          }
+          render() {
+            return <button onClick={() => this.action()}>Click</button>;
+          }
+        }
+      `,
+      parser: 'babel-eslint'
     }
   ],
 
@@ -229,6 +279,76 @@ ruleTester.run('no-unused-class-component-methods', rule, {
       parser: 'babel-eslint',
       errors: [{
         message: 'Unused method "handleClick" of class "Foo"',
+        line: 3,
+        column: 11
+      }]
+    },
+    {
+      code: `
+        class Foo extends React.Component {
+          action = async () => {}
+          render() {
+            return null;
+          }
+        }
+      `,
+      parser: 'babel-eslint',
+      errors: [{
+        message: 'Unused method "action" of class "Foo"',
+        line: 3,
+        column: 11
+      }]
+    },
+    {
+      code: `
+        class Foo extends React.Component {
+          async action() {
+            console.log('error');
+          }
+          render() {
+            return null;
+          }
+        }
+      `,
+      parser: 'babel-eslint',
+      errors: [{
+        message: 'Unused method "action" of class "Foo"',
+        line: 3,
+        column: 11
+      }]
+    },
+    {
+      code: `
+        class Foo extends React.Component {
+          * action() {
+            console.log('error');
+          }
+          render() {
+            return null;
+          }
+        }
+      `,
+      parser: 'babel-eslint',
+      errors: [{
+        message: 'Unused method "action" of class "Foo"',
+        line: 3,
+        column: 11
+      }]
+    },
+    {
+      code: `
+        class Foo extends React.Component {
+          async * action() {
+            console.log('error');
+          }
+          render() {
+            return null;
+          }
+        }
+      `,
+      parser: 'babel-eslint',
+      errors: [{
+        message: 'Unused method "action" of class "Foo"',
         line: 3,
         column: 11
       }]
