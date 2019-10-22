@@ -1,6 +1,6 @@
 # Prevent declaring unused methods of component class (react/no-unused-class-component-methods)
 
-Warns you if you have defined a method but it is never being used anywhere.
+Warns you if you have defined a method or property but it is never being used anywhere.
 
 ## Rule Details
 
