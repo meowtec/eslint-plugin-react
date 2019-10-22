@@ -1,15 +1,17 @@
 /**
- * @fileoverview Prevent declaring unused methods of component class
- * @author Paweł Nowak
+ * @fileoverview Prevent declaring unused methods and properties of component class
+ * @author Paweł Nowak, Berton Zhu
  */
+
 'use strict';
 
 // ------------------------------------------------------------------------------
 // Requirements
 // ------------------------------------------------------------------------------
 
-const rule = require('../../../lib/rules/no-unused-class-component-methods');
 const RuleTester = require('eslint').RuleTester;
+const rule = require('../../../lib/rules/no-unused-class-component-methods');
+const parsers = require('../../helpers/parsers');
 
 const parserOptions = {
   ecmaVersion: 2018,
@@ -26,6 +28,19 @@ const parserOptions = {
 const ruleTester = new RuleTester({parserOptions});
 ruleTester.run('no-unused-class-component-methods', rule, {
   valid: [
+    {
+      code: `
+        class SmockTestForTypeOfNullError extends React.Component {
+          handleClick() {}
+          foo;
+          render() {
+            let a;
+            return <button disabled onClick={this.handleClick} foo={this.foo}>Text</button>;
+          }
+        }
+      `,
+      parser: parsers.BABEL_ESLINT
+    },
     {
       code: `
         class Foo extends React.Component {
@@ -85,7 +100,7 @@ ruleTester.run('no-unused-class-component-methods', rule, {
           }
         }
       `,
-      parser: 'babel-eslint'
+      parser: parsers.BABEL_ESLINT
     },
     {
       code: `
@@ -116,11 +131,11 @@ ruleTester.run('no-unused-class-component-methods', rule, {
         class Foo extends React.Component {
           property = {}
           render() {
-            return <div>Example</div>;
+            return <div property={this.property}>Example</div>;
           }
         }
       `,
-      parser: 'babel-eslint'
+      parser: parsers.BABEL_ESLINT
     },
     {
       code: `
@@ -134,7 +149,7 @@ ruleTester.run('no-unused-class-component-methods', rule, {
           }
         }
       `,
-      parser: 'babel-eslint'
+      parser: parsers.BABEL_ESLINT
     },
     {
       code: `
@@ -146,7 +161,7 @@ ruleTester.run('no-unused-class-component-methods', rule, {
           }
         }
       `,
-      parser: 'babel-eslint'
+      parser: parsers.BABEL_ESLINT
     },
     {
       code: `
@@ -154,21 +169,11 @@ ruleTester.run('no-unused-class-component-methods', rule, {
           getValue = () => {}
           value = this.getValue()
           render() {
-            return null;
+            return this.value;
           }
         }
       `,
-      parser: 'babel-eslint'
-    },
-    {
-      code: `
-        var Foo = React.createClass({
-          action: function () {},
-          render: function () {
-            return <button onClick={this.action}>Example</button>;
-          }
-        });
-      `
+      parser: parsers.BABEL_ESLINT
     },
     {
       code: `
@@ -177,7 +182,7 @@ ruleTester.run('no-unused-class-component-methods', rule, {
           anotherAction = () => this.action()
         }
       `,
-      parser: 'babel-eslint'
+      parser: parsers.BABEL_ESLINT
     },
     {
       code: `
@@ -188,7 +193,7 @@ ruleTester.run('no-unused-class-component-methods', rule, {
           }
         }
       `,
-      parser: 'babel-eslint'
+      parser: parsers.BABEL_ESLINT
     },
     {
       code: `
@@ -201,7 +206,7 @@ ruleTester.run('no-unused-class-component-methods', rule, {
           }
         }
       `,
-      parser: 'babel-eslint'
+      parser: parsers.BABEL_ESLINT
     },
     {
       code: `
@@ -214,7 +219,7 @@ ruleTester.run('no-unused-class-component-methods', rule, {
           }
         }
       `,
-      parser: 'babel-eslint'
+      parser: parsers.BABEL_ESLINT
     },
     {
       code: `
@@ -227,7 +232,7 @@ ruleTester.run('no-unused-class-component-methods', rule, {
           }
         }
       `,
-      parser: 'babel-eslint'
+      parser: parsers.BABEL_ESLINT
     },
     {
       code: `
@@ -240,11 +245,147 @@ ruleTester.run('no-unused-class-component-methods', rule, {
           }
         }
       `,
-      parser: 'babel-eslint'
-    }
+      parser: parsers.BABEL_ESLINT
+    },
+    `class ClassAssignPropertyInMethodTest extends React.Component {
+      constructor() {
+        this.foo = 3;;
+      }
+      render() {
+        return <SomeComponent foo={this.foo} />;
+      }
+    }`,
+    {
+      code: `class ClassPropertyTest extends React.Component {
+          foo;
+          render() {
+            return <SomeComponent foo={this.foo} />;
+          }
+        }`,
+      parser: parsers.BABEL_ESLINT
+    },
+    {
+      code: `class ClassPropertyTest extends React.Component {
+          foo = a;
+          render() {
+            return <SomeComponent foo={this.foo} />;
+          }
+        }`,
+      parser: parsers.BABEL_ESLINT
+    },
+    {
+      code: `class Foo extends React.Component {
+          ['foo'] = a;
+          render() {
+            return <SomeComponent foo={this['foo']} />;
+          }
+        }`,
+      parser: parsers.BABEL_ESLINT
+    },
+    {
+      code: `class Foo extends React.Component {
+          ['foo'];
+          render() {
+            return <SomeComponent foo={this['foo']} />;
+          }
+        }`,
+      parser: parsers.BABEL_ESLINT
+    },
+    {
+      code: `class ClassComputedTemplatePropertyTest extends React.Component {
+          [\`foo\`] = a;
+          render() {
+            return <SomeComponent foo={this[\`foo\`]} />;
+          }
+        }`,
+      parser: parsers.BABEL_ESLINT
+    },
+    `class ClassLiteralComputedMemberTest extends React.Component {
+      ['foo']() {}
+      render() {
+        return <SomeComponent foo={this.foo} />;
+      }
+    }`,
+    `class ClassComputedTemplateMemberTest extends React.Component {
+      [\`foo\`]() {}
+      render() {
+        return <SomeComponent foo={this.foo} />;
+      }
+    }`,
+    `class ClassUseAssignTest extends React.Component {
+      foo() {}
+      render() {
+        this.foo;
+        return <SomeComponent />;
+      }
+    }`,
+    `class ClassUseAssignTest extends React.Component {
+      foo() {}
+      render() {
+        const { foo } = this;
+        return <SomeComponent />;
+      }
+    }`,
+    `class ClassUseDestructuringTest extends React.Component {
+      foo() {}
+      render() {
+        const { foo } = this;
+        return <SomeComponent />;
+      }
+    }`,
+    `class ClassUseDestructuringTest extends React.Component {
+      ['foo']() {}
+      render() {
+        const { 'foo': bar } = this;
+        return <SomeComponent />;
+      }
+    }`,
+    `class ClassComputedMemberTest extends React.Component {
+      [foo]() {}
+      render() {
+        return <SomeComponent />;
+      }
+    }`,
+    `class ClassWithLifecyleTest extends React.Component {
+      constructor(props) {
+        super(props);
+      }
+      static getDerivedStateFromProps() {}
+      componentWillMount() {}
+      UNSAFE_componentWillMount() {}
+      componentDidMount() {}
+      componentWillReceiveProps() {}
+      UNSAFE_componentWillReceiveProps() {}
+      shouldComponentUpdate() {}
+      componentWillUpdate() {}
+      UNSAFE_componentWillUpdate() {}
+      static getSnapshotBeforeUpdate() {}
+      componentDidUpdate() {}
+      componentDidCatch() {}
+      componentWillUnmount() {}
+      render() {
+        return <SomeComponent />;
+      }
+    }`
   ],
 
   invalid: [
+    {
+      code: `
+        class Foo extends React.Component {
+          property = {}
+          render() {
+            return <div>Example</div>;
+          }
+        }
+      `,
+      parser: parsers.BABEL_ESLINT,
+      errors: [{
+        message: 'Unused method or property "property" of class "Foo"',
+        line: 3,
+        column: 11
+      }]
+    },
     {
       code: `
         class Foo extends React.Component {
@@ -255,7 +396,7 @@ ruleTester.run('no-unused-class-component-methods', rule, {
         }
       `,
       errors: [{
-        message: 'Unused method "handleClick" of class "Foo"',
+        message: 'Unused method or property "handleClick" of class "Foo"',
         line: 3,
         column: 11
       }]
@@ -271,11 +412,11 @@ ruleTester.run('no-unused-class-component-methods', rule, {
         }
       `,
       errors: [{
-        message: 'Unused method "handleScroll" of class "Foo"',
+        message: 'Unused method or property "handleScroll" of class "Foo"',
         line: 3,
         column: 11
       }, {
-        message: 'Unused method "handleClick" of class "Foo"',
+        message: 'Unused method or property "handleClick" of class "Foo"',
         line: 4,
         column: 11
       }]
@@ -289,9 +430,9 @@ ruleTester.run('no-unused-class-component-methods', rule, {
           }
         }
       `,
-      parser: 'babel-eslint',
+      parser: parsers.BABEL_ESLINT,
       errors: [{
-        message: 'Unused method "handleClick" of class "Foo"',
+        message: 'Unused method or property "handleClick" of class "Foo"',
         line: 3,
         column: 11
       }]
@@ -305,9 +446,9 @@ ruleTester.run('no-unused-class-component-methods', rule, {
           }
         }
       `,
-      parser: 'babel-eslint',
+      parser: parsers.BABEL_ESLINT,
       errors: [{
-        message: 'Unused method "action" of class "Foo"',
+        message: 'Unused method or property "action" of class "Foo"',
         line: 3,
         column: 11
       }]
@@ -323,11 +464,11 @@ ruleTester.run('no-unused-class-component-methods', rule, {
           }
         }
       `,
-      parser: 'babel-eslint',
+      parser: parsers.BABEL_ESLINT,
       errors: [{
-        message: 'Unused method "action" of class "Foo"',
+        message: 'Unused method or property "action" of class "Foo"',
         line: 3,
-        column: 11
+        column: 17
       }]
     },
     {
@@ -341,11 +482,11 @@ ruleTester.run('no-unused-class-component-methods', rule, {
           }
         }
       `,
-      parser: 'babel-eslint',
+      parser: parsers.BABEL_ESLINT,
       errors: [{
-        message: 'Unused method "action" of class "Foo"',
+        message: 'Unused method or property "action" of class "Foo"',
         line: 3,
-        column: 11
+        column: 13
       }]
     },
     {
@@ -359,11 +500,11 @@ ruleTester.run('no-unused-class-component-methods', rule, {
           }
         }
       `,
-      parser: 'babel-eslint',
+      parser: parsers.BABEL_ESLINT,
       errors: [{
-        message: 'Unused method "action" of class "Foo"',
+        message: 'Unused method or property "action" of class "Foo"',
         line: 3,
-        column: 11
+        column: 19
       }]
     },
     {
@@ -377,12 +518,157 @@ ruleTester.run('no-unused-class-component-methods', rule, {
           }
         }
       `,
-      parser: 'babel-eslint',
+      parser: parsers.BABEL_ESLINT,
       errors: [{
-        message: 'Unused method "action" of class "Foo"',
+        message: 'Unused method or property "action" of class "Foo"',
         line: 3,
         column: 11
       }]
+    },
+    {
+      code: `
+        class ClassAssignPropertyInMethodTest extends React.Component {
+          constructor() {
+            this.foo = 3;
+          }
+          render() {
+            return <SomeComponent />;
+          }
+        }
+      `,
+      errors: [{
+        message: 'Unused method or property "foo" of class "ClassAssignPropertyInMethodTest"',
+        line: 4,
+        column: 18
+      }]
+    },
+    {
+      code: `
+        class Foo extends React.Component {
+          foo;
+          render() {
+            return <SomeComponent />;
+          }
+        }
+      `,
+      errors: [{
+        message: 'Unused method or property "foo" of class "Foo"',
+        line: 3,
+        column: 11
+      }],
+      parser: parsers.BABEL_ESLINT
+    },
+    {
+      code: `
+        class Foo extends React.Component {
+          foo = a;
+          render() {
+            return <SomeComponent />;
+          }
+        }
+      `,
+      errors: [{
+        message: 'Unused method or property "foo" of class "Foo"',
+        line: 3,
+        column: 11
+      }],
+      parser: parsers.BABEL_ESLINT
+    },
+    {
+      code: `
+        class Foo extends React.Component {
+          ['foo'];
+          render() {
+            return <SomeComponent />;
+          }
+        }
+      `,
+      errors: [{
+        message: 'Unused method or property "foo" of class "Foo"',
+        line: 3,
+        column: 12
+      }],
+      parser: parsers.BABEL_ESLINT
+    },
+    {
+      code: `
+        class Foo extends React.Component {
+          ['foo'] = a;
+          render() {
+            return <SomeComponent />;
+          }
+        }
+      `,
+      errors: [{
+        message: 'Unused method or property "foo" of class "Foo"',
+        line: 3,
+        column: 12
+      }],
+      parser: parsers.BABEL_ESLINT
+    },
+    {
+      code: `
+        class Foo extends React.Component {
+          foo = a;
+          render() {
+            return <SomeComponent foo={this[foo]} />;
+          }
+        }
+      `,
+      errors: [{
+        message: 'Unused method or property "foo" of class "Foo"',
+        line: 3,
+        column: 11
+      }],
+      parser: parsers.BABEL_ESLINT
+    },
+    {
+      code: `
+        class Foo extends React.Component {
+          private foo;
+          render() {
+            return <SomeComponent />;
+          }
+        }
+      `,
+      errors: [{
+        message: 'Unused method or property "foo" of class "Foo"',
+        line: 3,
+        column: 19
+      }],
+      parser: parsers.TYPESCRIPT_ESLINT
+    },
+    {
+      code: `
+        class Foo extends React.Component {
+          private foo() {}
+          render() {
+            return <SomeComponent />;
+          }
+        }
+      `,
+      errors: [{
+        message: 'Unused method or property "foo" of class "Foo"',
+        line: 3,
+        column: 19
+      }],
+      parser: parsers.TYPESCRIPT_ESLINT
+    },
+    {
+      code: `
+        class Foo extends React.Component {
+          private foo = 3;
+          render() {
+            return <SomeComponent />;
+          }
+        }
+      `,
+      errors: [{
+        message: 'Unused method or property "foo" of class "Foo"',
+        line: 3,
+        column: 19
+      }],
+      parser: parsers.TYPESCRIPT_ESLINT
     }
   ]
 });
