@@ -53,6 +53,16 @@ ruleTester.run('no-unused-class-component-methods', rule, {
     },
     {
       code: `
+        var Foo = createReactClass({
+          handleClick() {},
+          render() {
+            return <button onClick={this.handleClick}>Text</button>;
+          },
+        })
+      `
+    },
+    {
+      code: `
         class Foo extends React.Component {
           action() {}
           componentDidMount() {
@@ -62,6 +72,19 @@ ruleTester.run('no-unused-class-component-methods', rule, {
             return null;
           }
         }
+      `
+    },
+    {
+      code: `
+        var Foo = createReactClass({
+          action() {},
+          componentDidMount() {
+            this.action();
+          },
+          render() {
+            return null;
+          },
+        })
       `
     },
     {
@@ -256,48 +279,69 @@ ruleTester.run('no-unused-class-component-methods', rule, {
       }
     }`,
     {
-      code: `class ClassPropertyTest extends React.Component {
+      code: `
+        class ClassPropertyTest extends React.Component {
           foo;
           render() {
             return <SomeComponent foo={this.foo} />;
           }
-        }`,
+        }
+      `,
       parser: parsers.BABEL_ESLINT
     },
     {
-      code: `class ClassPropertyTest extends React.Component {
+      code: `
+        class ClassPropertyTest extends React.Component {
           foo = a;
           render() {
             return <SomeComponent foo={this.foo} />;
           }
-        }`,
+        }
+      `,
       parser: parsers.BABEL_ESLINT
     },
     {
-      code: `class Foo extends React.Component {
+      code: `
+        class Foo extends React.Component {
           ['foo'] = a;
           render() {
             return <SomeComponent foo={this['foo']} />;
           }
-        }`,
+        }
+      `,
       parser: parsers.BABEL_ESLINT
     },
     {
-      code: `class Foo extends React.Component {
+      code: `
+        class Foo extends React.Component {
           ['foo'];
           render() {
             return <SomeComponent foo={this['foo']} />;
           }
-        }`,
+        }
+      `,
       parser: parsers.BABEL_ESLINT
     },
     {
-      code: `class ClassComputedTemplatePropertyTest extends React.Component {
+      code: `
+        class ClassComputedTemplatePropertyTest extends React.Component {
           [\`foo\`] = a;
           render() {
             return <SomeComponent foo={this[\`foo\`]} />;
           }
-        }`,
+        }
+      `,
+      parser: parsers.BABEL_ESLINT
+    },
+    {
+      code: `
+        class ClassComputedTemplatePropertyTest extends React.Component {
+          state = {}
+          render() {
+            return <div />;
+          }
+        }
+      `,
       parser: parsers.BABEL_ESLINT
     },
     `class ClassLiteralComputedMemberTest extends React.Component {
@@ -366,7 +410,32 @@ ruleTester.run('no-unused-class-component-methods', rule, {
       render() {
         return <SomeComponent />;
       }
-    }`
+    }`,
+    `var ClassWithLifecyleTest = createReactClass({
+      mixins: [],
+      constructor(props) {
+      },
+      getDefaultProps() {
+        return {}
+      },
+      getInitialState: function() {
+        return {x: 0};
+      },
+      componentWillMount() {},
+      UNSAFE_componentWillMount() {},
+      componentDidMount() {},
+      componentWillReceiveProps() {},
+      UNSAFE_componentWillReceiveProps() {},
+      shouldComponentUpdate() {},
+      componentWillUpdate() {},
+      UNSAFE_componentWillUpdate() {},
+      componentDidUpdate() {},
+      componentDidCatch() {},
+      componentWillUnmount() {},
+      render() {
+        return <SomeComponent />;
+      },
+    })`
   ],
 
   invalid: [
@@ -397,6 +466,36 @@ ruleTester.run('no-unused-class-component-methods', rule, {
       `,
       errors: [{
         message: 'Unused method or property "handleClick" of class "Foo"',
+        line: 3,
+        column: 11
+      }]
+    },
+    {
+      code: `
+        var Foo = createReactClass({
+          handleClick() {},
+          render() {
+            return null;
+          },
+        })
+      `,
+      errors: [{
+        message: 'Unused method or property "handleClick"',
+        line: 3,
+        column: 11
+      }]
+    },
+    {
+      code: `
+        var Foo = createReactClass({
+          a: 3,
+          render() {
+            return null;
+          },
+        })
+      `,
+      errors: [{
+        message: 'Unused method or property "a"',
         line: 3,
         column: 11
       }]
@@ -505,6 +604,22 @@ ruleTester.run('no-unused-class-component-methods', rule, {
         message: 'Unused method or property "action" of class "Foo"',
         line: 3,
         column: 19
+      }]
+    },
+    {
+      code: `
+        class Foo extends React.Component {
+          getInitialState() {}
+          render() {
+            return null;
+          }
+        }
+      `,
+      parser: parsers.BABEL_ESLINT,
+      errors: [{
+        message: 'Unused method or property "getInitialState" of class "Foo"',
+        line: 3,
+        column: 11
       }]
     },
     {
