@@ -19,6 +19,9 @@ The following patterns are **not** considered warnings:
 
 ```jsx
 class Foo extends React.Component {
+  static getDerivedStateFromError(error) {
+    return { hasError: true };
+  }
   action() {}
   componentDidMount() {
     this.action();
